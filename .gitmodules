@@ -1,0 +1,12 @@
+[submodule "cookbooks/nginx"]
+	path = cookbooks/nginx
+	url = git://github.com/miketheman/nginx.git
+[submodule "cookbooks/windows"]
+	path = cookbooks/windows
+	url = git://github.com/opscode-cookbooks/windows.git
+[submodule "cookbooks/iis"]
+	path = cookbooks/iis
+	url = git://github.com/opscode-cookbooks/iis.git
+[submodule "cookbooks/newrelic"]
+	path = cookbooks/newrelic
+	url = git://github.com/escapestudios-cookbooks/newrelic.git
