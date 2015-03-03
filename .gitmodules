@@ -10,3 +10,6 @@
 [submodule "cookbooks/newrelic"]
 	path = cookbooks/newrelic
 	url = git://github.com/escapestudios-cookbooks/newrelic.git
+[submodule "cookbooks/aws"]
+	path = cookbooks/aws
+	url = git://github.com/opscode-cookbooks/aws.git
