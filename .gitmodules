@@ -13,3 +13,6 @@
 [submodule "cookbooks/aws"]
 	path = cookbooks/aws
 	url = git://github.com/opscode-cookbooks/aws.git
+[submodule "cookbooks/scalr"]
+	path = cookbooks/scalr
+	url = git://github.com/scalr-tutorials/scalr-cookbook.git
