@@ -49,6 +49,22 @@ powershell_script "get data" do
   EOH
   not_if {::File.exists?('z:/data.zip')}
 end
+powershell_script "get meta" do
+  code <<-EOH
+  $meta = Get-S3ObjectMetadata -BucketName #{node['lytteltonlounge']['s3bucket']} -Key #{node['lytteltonlounge']['s3data']}
+  $strFileName="z:\data.txt"
+  If (Test-Path $strFileName){
+    $oldVersion = Get-Content z:\data.txt
+  }Else{
+    $oldVersion = ""
+  }
+  If ($oldVersion -ne $meta.VersionId) {
+    $meta.VersionId | Out-File z:\data.txt
+    Read-S3Object -BucketName #{node['lytteltonlounge']['s3bucket']} -Key #{node['lytteltonlounge']['s3data']} -File z:\data.zip
+    Remove-Item #{node['lytteltonlounge']['www']}/_global/db/media.json
+  }
+  EOH
+end
 
 windows_zipfile "#{node['lytteltonlounge']['www']}/_global/db" do
   source 'z:\data.zip'

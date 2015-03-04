@@ -1,0 +1,12 @@
+$meta = Get-S3ObjectMetadata -BucketName <%= node['lytteltonlounge']['s3bucket'] %> -Key <%= node['lytteltonlounge']['s3data'] %>
+$strFileName="z:\data.txt"
+If (Test-Path $strFileName){
+  $oldVersion = Get-Content z:\data.txt
+}Else{
+  $oldVersion = ""
+}
+
+If ($oldVersion != $meta.VersionId) {
+  $meta.VersionId | Out-File z:\data.txt
+  Read-S3Object -BucketName <%= node['lytteltonlounge']['s3bucket'] %> -Key <%= node['lytteltonlounge']['s3data'] %> -File z:\data.zip
+}
