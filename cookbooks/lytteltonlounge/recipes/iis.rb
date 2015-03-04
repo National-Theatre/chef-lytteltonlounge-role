@@ -7,55 +7,94 @@
 # All rights reserved - Do Not Redistribute
 #
 
-include_recipe "iis::default"
-include_recipe "windows::default"
-include Chef::Mixin::PowershellOut
+include_recipe "iis"
+include_recipe "windows"
+include_recipe "aws"
+#include Chef::Mixin::PowershellOut
+#require Chef::Mixin::PowershellOut
+#Chef::Resource::Execute.send(:include,Chef::Mixin::PowershellOut)
+::Chef::Recipe.send(:include, Chef::Mixin::PowershellOut)
 
-aws_s3_file "c:\lynlge.zip" do
-  bucket node['lyttenltonlounge']['s3bucket']
-  remote_path "#{node['lyttenltonlounge']['code_url']}"
-  not_if {::File.exists?('c:\lynlge.zip')}
+#aws_s3_file "z:/lynlge.zip" do
+#  bucket node['lytteltonlounge']['s3bucket']
+#  remote_path "#{node['lytteltonlounge']['code_url']}"
+#  aws_access_key_id creds['AccessKeyId']
+#  aws_secret_access_key creds['SecretAccessKey']
+#  not_if {::File.exists?('z:/lynlge.zip')}
+#end
+
+powershell_script "get code" do
+  code <<-EOH
+  Read-S3Object -BucketName #{node['lytteltonlounge']['s3bucket']} -Key #{node['lytteltonlounge']['code_url']} -File z:\lynlge.zip
+  EOH
+  not_if {::File.exists?('z:/lynlge.zip')}
 end
 
-windows_zipfile node['lytteltonlounge']['www'] do
-  source 'c:\lynlge.zip'
+windows_zipfile "#{node['lytteltonlounge']['www']}" do
+  source 'z:/lynlge.zip'
   action :unzip
-  not_if {::File.exists?("#{node['lytteltonlounge']['www']}\index.html")}
+  not_if {::File.exists?("#{node['lytteltonlounge']['www']}/index.html")}
 end
 
-aws_s3_file "c:\data.zip" do
-  bucket node['lyttenltonlounge']['s3bucket']
-  remote_path "#{node['lyttenltonlounge']['s3data']}"
-  not_if {::File.exists?('c:\data.zip')}
+#aws_s3_file "z:\data.zip" do
+#  bucket node['lytteltonlounge']['s3bucket']
+#  remote_path "#{node['lytteltonlounge']['s3data']}"
+#  aws_access_key_id creds['AccessKeyId']
+#  aws_secret_access_key creds['SecretAccessKey']
+#  not_if {::File.exists?('z:\data.zip')}
+#end
+powershell_script "get data" do
+  code <<-EOH
+  Read-S3Object -BucketName #{node['lytteltonlounge']['s3bucket']} -Key #{node['lytteltonlounge']['s3data']} -File z:\data.zip
+  EOH
+  not_if {::File.exists?('z:/data.zip')}
 end
 
-windows_zipfile "#{node['lytteltonlounge']['www']}\_global\db" do
-  source 'c:\data.zip'
+windows_zipfile "#{node['lytteltonlounge']['www']}/_global/db" do
+  source 'z:\data.zip'
   action :unzip
-  not_if {::File.exists?("#{node['lytteltonlounge']['www']}\_global\db\media.json")}
+  not_if {::File.exists?("#{node['lytteltonlounge']['www']}/_global/db/media.json")}
 end
 
-data = powershell_out("Get-S3ObjectMetadata -BucketName #{node['lyttenltonlounge']['s3bucket']} -Key #{node['lyttenltonlounge']['s3data']}")
-ruby_block "save_version" do
-  block do
-    File.new('c:\data_version.txt', 'w') do |f|
-      f.puts data.VersionId
-    end
-  end
-  not_if {::File.exists('c:\data_version.txt')}
+#data = powershell_out("Get-S3ObjectMetadata -BucketName #{node['lytteltonlounge']['s3bucket']} -Key #{node['lytteltonlounge']['s3data']}")
+#ruby_block "save_version" do
+#  block do
+#    puts data.inspect
+#    puts data.stdout
+#    require 'json'
+#    puts JSON.parse("{#{data.stdout}}")
+#    File.new('c:\data_version.txt', 'w') do |f|
+#      f.puts data.VersionId
+#    end
+#  end
+#  not_if {File.exist?('c:\data_version.txt')}
+#end
+
+
+#aws_s3_file "z:\lynlgetimeline.zip" do
+#  bucket node['lytteltonlounge']['s3bucket']
+#  remote_path "#{node['lytteltonlounge']['timeline']}"
+#  aws_access_key_id creds['AccessKeyId']
+#  aws_secret_access_key creds['SecretAccessKey']
+#  not_if {::File.exists?('z:\lynlgetimeline.zip')}
+#end
+powershell_script "get timeline" do
+  code <<-EOH
+  Read-S3Object -BucketName #{node['lytteltonlounge']['s3bucket']} -Key #{node['lytteltonlounge']['timeline']} -File z:\lynlgetimeline.zip
+  EOH
+  not_if {::File.exists?('z:/lynlgetimeline.zip')}
 end
 
-
-aws_s3_file "c:\lynlgetimeline.zip" do
-  bucket node['lyttenltonlounge']['s3bucket']
-  remote_path "#{node['lyttenltonlounge']['timeline']}"
-  not_if {::File.exists?('c:\lynlgetimeline.zip')}
-end
-
-windows_zipfile "#{node['lytteltonlounge']['www']}\timeline" do
-  source 'c:\lynlgetimeline.zip'
+windows_zipfile "#{node['lytteltonlounge']['www']}/timeline" do
+  source 'z:\lynlgetimeline.zip'
   action :unzip
-  not_if {::File.exists?("#{node['lytteltonlounge']['www']}\timeline\index.html")}
+  not_if {::File.exists?("#{node['lytteltonlounge']['www']}/timeline/index.html")}
+end
+
+iis_pool 'Lyttelton Lounge' do
+  runtime_version "4.0"
+  pipeline_mode :Classic
+  action :add
 end
 
 iis_site 'Lyttelton Lounge' do
@@ -63,5 +102,6 @@ iis_site 'Lyttelton Lounge' do
   port 80
   path "#{node['lytteltonlounge']['www']}"
   host_header "#{node['lytteltonlounge']['vhost']}"
+  application_pool 'Lyttelton Lounge'
   action [:add,:start]
 end
