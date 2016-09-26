@@ -69,6 +69,7 @@ end
 windows_zipfile "#{node['lytteltonlounge']['www']}/_global/db" do
   source 'z:\data.zip'
   action :unzip
+  overwrite true
   not_if {::File.exists?("#{node['lytteltonlounge']['www']}/_global/db/media.json")}
 end
 
